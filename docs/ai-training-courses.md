@@ -12,7 +12,7 @@
 
 ## Previous Courses
 
-| Year | Course | URLs | Format | Run by | Duration | Attended by (and when) | Contents | Comments |
+| Year | Course | URLs | Format | Run by | Duration | Attended by (and when) | Contents&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Comments |
 |------|--------|------|--------|--------|----------|------------------------|----------|----------|
 |   |   |   |   |   |   |   |   |   |
 | 2024 | Classical Machine Learning | [Notebooks](https://github.com/stfc-sciml/sciml-workshop/tree/master/course_3.0/CLASSICAL) | Hybrid | STFC SciML Team | 2.5 hrs | CEDA Staff (07/06/2024) | Intro to Supervised and Unsupervised ML; Including Decision Trees and Clustering; Slides and Jupyter Notebooks. | |
