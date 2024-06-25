@@ -1,0 +1,6 @@
+pandas
+langchain
+langchain_community
+openai
+sentence_transformers
+pinecone
