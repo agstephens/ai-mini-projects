@@ -36,17 +36,3 @@ The content of your own documentation is recorded into *chunks* which are upload
 
 Any commercial LLM will require you to set up an account, probably pay something, and then get an API Key. In this instance, we are using OpenAI. You could also download your tools such as `ollama` and run your own instance of an LLM. It all depends on the cost vs effort considerations.
 
-## Create embeddings
-
-We want to find relevant data in our Pinecone index to condition the LLM on.
-
-query = "How do I specify the memory when submitting a Slurm job to LOTUS?"
-
-But first... a benchmark with the vanilla LLM
-
-Embed and match our search vector
-
-embed with sentence transformer
-k = 5
-
-
