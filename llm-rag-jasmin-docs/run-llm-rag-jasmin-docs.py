@@ -1,35 +1,32 @@
 import os, time, sys
+import warnings
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 
 from sentence_transformers import SentenceTransformer
 
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+#from langchain_community.chat_models import ChatOpenAI
+#from langchain.chat_models import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate
 
 from pinecone import Pinecone, ServerlessSpec
 
-print("WARNING***************")
-print("This includes API Keys!!!")
-print("DO PIP INSTALL: pip install langchain_community")
+from jasmin_docs_parser import parse_repo
 
-print("This lives in the following workspace...")
-print("""
-source /home/workspace/mambaforge/bin/activate llm-rag
 
-""")
-
+# Check that service API keys are defined as environment variables
 req_keys = ["PINECONE_API_KEY", "OPENAI_API_KEY"]
 for req_key in req_keys:
     if req_key not in os.environ:
 	    raise KeyError(f"Missing env var: {req_key}")
 		
-
-
 pinecone_api_key = os.environ["PINECONE_API_KEY"]
 openai_api_key = os.environ["OPENAI_API_KEY"]
 
-print("NOTE: Your ChatGPT paid account is NOT THE SAME as an OpenAI account!")
+# NOTE: Your ChatGPT paid account is NOT THE SAME as an OpenAI account!
 
 pc = Pinecone(api_key=pinecone_api_key)
 
@@ -61,29 +58,15 @@ class SentenceTransformerEmbedder(AbstractEmbedder):
 
 
 
-text_sample = [
-    "Hello Gen AI friends!",
-    "Metaflow helps you build production machine learning workflows",
-    "Lots of people recognize machine learning systems require robust workflows",
-]
-
-# https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2
-embedding_model = "paraphrase-MiniLM-L6-v2"
-
-encoder = SentenceTransformerEmbedder(embedding_model, device="cpu")
-embedding = encoder.embed(text_sample)
-
-dimension = embedding.shape[1]
-
-
 df_csv = "jasmin_docs.csv"
 
 
 if os.path.isfile(df_csv):
-    print(f"Loading: {df_csv}")
+    print(f"Loading docs from: {df_csv}")
     df = pd.read_csv(df_csv)
 else:
-    print("Need to add in code here to parse JASMIN repo...later.")
+    print("Parsing docs from GitHub repo...")
+    df = parse_repo(csv_path="jasmin_docs.csv")
     df.to_csv(df_csv, index=False)
     print(f"Wrote: {df_csv}")
 
@@ -98,24 +81,30 @@ df = df[df.char_count > char_count_threshold]
 
 df
 
-
 # Instantiate an encoder
+# https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L6-v2
+embedding_model = "paraphrase-MiniLM-L6-v2"
 encoder = SentenceTransformerEmbedder(embedding_model, device="cpu")
 
 # Fetch docs from dataframe
 docs = df.contents.tolist()
 
-# Encode documents
-embeddings = encoder.embed(docs)  # takes ~30-45 seconds on average in sandbox instance
-dimension = len(embeddings[0])
-print("Dimension is %s" % dimension)
+DO_ENCODE = False
+
+if DO_ENCODE:
+    # Encode documents
+    embeddings = encoder.embed(docs)  # takes ~30-45 seconds on average in sandbox instance
+    dimension = len(embeddings[0])
+    print("Length (dimension) of embeddings is %s" % dimension)
 
 pc = Pinecone(api_key=pinecone_api_key)
 
 index_name = "jasmin-documentation"
 metric = "cosine"  # https://docs.pinecone.io/docs/indexes#distance-metrics
 
-try:
+DELETE_INDEX = False
+
+if DELETE_INDEX:
     pc.delete_index(    
         name=index_name,
         dimension=dimension,
@@ -123,11 +112,10 @@ try:
         spec=ServerlessSpec(cloud="aws", region="us-east-1"),
     )
     print(f"Deleted: {index_name}")
-except Exception as exc:
-    print("No index found - so didn't delete.")
 
 
 if index_name not in pc.list_indexes().names():
+    print(f"Creating index: {index_name}")
     # https://docs.pinecone.io/reference/create_index
     pc.create_index(
         name=index_name,
@@ -135,27 +123,29 @@ if index_name not in pc.list_indexes().names():
         metric=metric,
         spec=ServerlessSpec(cloud="aws", region="us-east-1"),
     )
-else:
-    print(f"Index {index_name} already exists")
+
 
 ids = df.index.values
 
 # connect to the index
 index = pc.Index(index_name)
 
-vectors = [
-    {
+DO_UPSERT = False
+if DO_UPSERT:
+    vectors = [
+      {
         "id": str(idx),
         "values": emb.tolist(),
         "metadata": {"text": txt},
-    }
-    for idx, (txt, emb) in enumerate(zip(docs, embeddings))
-]
-upsert_response = index.upsert(vectors=vectors)
+      }
+      for idx, (txt, emb) in enumerate(zip(docs, embeddings))
+    ]
+    upsert_response = index.upsert(vectors=vectors)
 
-print("search with a query")
+else:
+    print(f"Index {index_name} has already been populated.")
 
-
+# Now execute a query
 args = sys.argv
 if len(args) > 1:
     query = args[1]
@@ -164,20 +154,18 @@ else:
 
 print(f"\n\nTesting this query:\n\t'{query}'.")
 
-# ### But first... a benchmark with the vanilla LLM
-
-# %%
-
-# %%
 human_template = "{user_query}"
 chat_prompt = ChatPromptTemplate.from_messages([("human", human_template)])
 chat = ChatOpenAI(openai_api_key=openai_api_key)
-response = chat(chat_prompt.format_messages(user_query=query))
-print("response:", response.content)
+response = chat.invoke(chat_prompt.format_messages(user_query=query))
+
+print(f"\n\nResponse from OpenAI model (without RAG):\n{response.content}\n\n")
 
 # embed with sentence transformer
 k = 5
 
+# Now encode the query and in vector space and see which document (fragments) match
+# from our JASMIN docs.
 vector = encoder.embed([query])[0]
 matches = index.query(vector=vector.tolist(), top_k=k, include_metadata=True)
 matches = matches.to_dict()["matches"]
@@ -190,7 +178,7 @@ row_idxs
 
 retrieved_results = df.iloc[row_idxs, :]
 retrieved_results
-print("\n\n\nHERE IS THE RETRIEVED RESULTS:\n\n", retrieved_results)
+print("\n\n\nHERE IS THE RETRIEVED RESULTS USING RAG:\n\n", retrieved_results)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -223,7 +211,7 @@ chat_prompt = ChatPromptTemplate.from_messages(
 
 chat = ChatOpenAI(openai_api_key=openai_api_key)
 
-response = chat(
+response = chat.invoke(
     chat_prompt.format_messages(
         user_query=query, context=_context, system_message=system_message
     )
