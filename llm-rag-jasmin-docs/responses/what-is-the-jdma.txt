@@ -1,0 +1,45 @@
+Loading docs from: jasmin_docs.csv
+Downloaded repo:                    title  ... word_count
+0        About this site  ...        175
+1  Issues with this site  ...         57
+2           Other issues  ...         95
+3         'Example Job 2  ...        543
+4        Job information  ...        248
+
+[5 rows x 5 columns]
+Index jasmin-documentation has already been populated.
+
+
+Testing this query:
+	'What is the JDMA?'.
+
+
+Response from OpenAI model (without RAG):
+The JDMA stands for Joint Defense Manufacturing Agreement, which is an agreement between the United States and Japan that allows for the joint development and production of defense equipment and technology. This agreement helps to strengthen the defense relationship between the two countries and promotes interoperability between their militaries.
+
+
+
+
+
+HERE IS THE RETRIEVED RESULTS USING RAG:
+
+                                        title  ... word_count
+649                 Data migration disk/tape  ...         47
+472  Joint-storage Data Migration App (JDMA)  ...        312
+642                                      IDL  ...         36
+573                             What is IDL?  ...         17
+204                             Introduction  ...         56
+
+[5 rows x 5 columns]
+
+
+
+HERE IS THE response.content:
+
+ The Joint Data Migration App (JDMA) is a flexible tool for managing large migrations of data between a range of storage media. It can be used on JASMIN for migrating data to/from tape, disk, and object-store. JDMA provides a single API for users to move data to different storage systems, query stored data, and retrieve it. Users can interact with JDMA through a command-line tool, a Python library, or an HTTP API. The tool was designed with usability criteria in mind to ensure a consistent user experience, maintain user permissions, provide notifications for transfer completion, and allow data transfers between storage systems. JDMA is solely a request and query layer, and any data cataloging is handled by the backend system. For more detailed information on using JDMA, you can refer to the [JDMA user documentation](http://cedadev.github.io/jdma_client/docs/build/html/index.html). 
+
+
+real    1m15.522s
+user    0m44.039s
+sys     0m29.660s
+
