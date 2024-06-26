@@ -1,0 +1,46 @@
+(llm-rag-venv) (base) $ time python run-llm-rag-jasmin-docs.py "When was JASMIN created?"
+Loading docs from: jasmin_docs.csv
+Downloaded repo:                    title                                           contents                                           page_url  char_count  word_count
+0        About this site  **We hope you like our new-look help docs** wh...  https://help.jasmin.ac.uk/docs/about-this-site...        1030         175
+1  Issues with this site  If you spot any broken links or incorrect info...  https://help.jasmin.ac.uk/docs/about-this-site...         413          57
+2           Other issues  For all other reports of problems, or for any ...  https://help.jasmin.ac.uk/docs/about-this-site...         542          95
+3         'Example Job 2  This page records some early CEDA usage of the...  https://help.jasmin.ac.uk/docs/batch-computing...        4256         543
+4        Job information  Information on all running and pending batch j...  https://help.jasmin.ac.uk/docs/batch-computing...        1514         248
+Index jasmin-documentation has already been populated.
+
+
+Testing this query:
+        'When was JASMIN created?'.
+
+
+Response from OpenAI model (without RAG):
+JASMIN was created in 2012.
+
+
+Batches: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:02<00:00,  2.18s/it]
+
+
+
+HERE IS THE RETRIEVED RESULTS USING RAG:
+
+                                              title                                           contents  ... char_count  word_count
+635                              Software Overview  JASMIN is a large platform where a range of so...  ...        611          96
+245                                  JASMIN status  This article lists sources of information abou...  ...         79          12
+366  Getting access to the JASMIN Notebook Service  In order to access the JASMIN Notebook service...  ...        572          78
+306                        Update a JASMIN account  This article shows you how to update an active...  ...         93          16
+633                How do I get started (quickly)?  If you want to access most of the packages you...  ...        272          47
+
+[5 rows x 5 columns]
+
+
+
+HERE IS THE response.content:
+
+ I don't have specific information about when JASMIN was created. Would you like to know more about the software available on JASMIN, the status of JASMIN services, accessing the JASMIN Notebook service, updating a JASMIN account, or how to activate specific environments on JASMIN?
+
+
+
+
+real    0m51.981s
+user    0m32.729s
+sys     0m18.440s
